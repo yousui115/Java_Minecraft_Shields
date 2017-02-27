@@ -6,6 +6,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -14,12 +15,16 @@ import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.translation.I18n;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import yousui115.shields.Shields;
+import yousui115.shields.network.MsgKey;
+import yousui115.shields.network.PacketHandler;
 
 import com.google.common.collect.Lists;
 
-public class ItemSShield extends ItemShield
+public class ItemShields extends ItemShield
 {
     @Override
     public String getItemStackDisplayName(ItemStack stackIn)
@@ -32,6 +37,23 @@ public class ItemSShield extends ItemShield
     {
         EnumShieldState state = getShieldState(stackIn);
         return state != null ? "item.shields." + state.nameMaterial : "";
+    }
+
+    @Override
+    public void onUpdate(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected)
+    {
+        if (worldIn.isRemote && Shields.proxy.getThePlayer() != null)
+        {
+            if (stack == Shields.proxy.getThePlayer().getHeldItemOffhand())
+            {
+                Shields.proxy.stackInputDate();
+
+                if (Shields.proxy.isKeyUp())
+                {
+                    PacketHandler.INSTANCE.sendToServer(new MsgKey('R'));
+                }
+            }
+        }
     }
 
     @SideOnly(Side.CLIENT)
@@ -58,6 +80,7 @@ public class ItemSShield extends ItemShield
         {
             ItemStack stack = new ItemStack(itemIn);
             setShieldState(stack, state);
+            setShieldStates(stack, state);
             subItems.add(stack);
         }
     }
@@ -93,7 +116,7 @@ public class ItemSShield extends ItemShield
         EnumShieldState state = null;
 
         if (stackIn != null
-            && stackIn.getItem() instanceof ItemSShield
+            && stackIn.getItem() instanceof ItemShields
 //            && stackIn.hasTagCompound()
 //            && stackIn.getTagCompound().hasKey("shields.state")
            )
@@ -106,11 +129,43 @@ public class ItemSShield extends ItemShield
         return state;
     }
 
-    public static void setShieldState(@Nonnull ItemStack stackIn, @Nonnull EnumShieldState state)
+    public static void setShieldState(@Nonnull ItemStack stackIn, @Nonnull EnumShieldState stateIn)
     {
-//        stackIn.setTagInfo("shields.state", new NBTTagInt(state.ordinal()));
         NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
-        nbt.setInteger("state", state.ordinal());
+        nbt.setInteger("state", stateIn.ordinal());
+    }
+
+
+    @Nullable
+    public static int getShieldStates(ItemStack stackIn)
+    {
+        int states = 0;
+
+        if (stackIn != null
+            && stackIn.getItem() instanceof ItemShields
+//            && stackIn.hasTagCompound()
+//            && stackIn.getTagCompound().hasKey("shields.state")
+           )
+        {
+            NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
+
+            states = nbt.getInteger("states");
+        }
+
+        return states;
+    }
+
+    public static void setShieldStates(@Nonnull ItemStack stackIn, @Nonnull EnumShieldState stateIn)
+    {
+        NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
+        nbt.setInteger("states", stateIn.ordinal());
+    }
+
+    public static void addShieldStates(@Nonnull ItemStack stackIn, @Nonnull EnumShieldState stateIn)
+    {
+        NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
+        int states = nbt.getInteger("states");
+        nbt.setInteger("states", states | stateIn.bit);
     }
 
     /**
@@ -120,7 +175,7 @@ public class ItemSShield extends ItemShield
     {
         NONE,
         FIRE,
-        ICE,
+        FREEZE,
         REFLECT,
         ROBUST
     }
@@ -130,11 +185,13 @@ public class ItemSShield extends ItemShield
      */
     public enum EnumShieldState
     {
-        WOOD(      50,     "wood", false,    EnumShieldAction.NONE, Item.getItemFromBlock(Blocks.LOG), Item.getItemFromBlock(Blocks.LOG2)),
-//        VANILLA(  336,  "vanilla",  true, Item.getItemFromBlock(Blocks.PLANKS)),
-        DIAMOND( 1000,  "diamond",  true, EnumShieldAction.REFLECT, Items.DIAMOND),
-        OBSIDIAN(1000, "obsidian",  true,  EnumShieldAction.ROBUST, Item.getItemFromBlock(Blocks.OBSIDIAN));
+        WOOD(    0x00,   50,     "wood", false,    EnumShieldAction.NONE, Item.getItemFromBlock(Blocks.PLANKS)),
+        FLAME(   0x01, 1000,    "flame",  true,    EnumShieldAction.FIRE, Items.QUARTZ),
+        ICE(     0x02, 1000,      "ice",  true,  EnumShieldAction.FREEZE, Item.getItemFromBlock(Blocks.ICE)),
+        DIAMOND( 0x04, 1000,  "diamond",  true, EnumShieldAction.REFLECT, Items.DIAMOND),
+        OBSIDIAN(0x08, 1000, "obsidian",  true,  EnumShieldAction.ROBUST, Item.getItemFromBlock(Blocks.OBSIDIAN));
 
+        public final int bit;
         public final int maxDamage;
         public final String nameMaterial;
         public final boolean canJG;
@@ -145,8 +202,9 @@ public class ItemSShield extends ItemShield
         /**
          * ■
          */
-        private EnumShieldState(int maxDamageIn, String nameIn, boolean canJGIn, EnumShieldAction actionIn, Item ...itemsIn)
+        private EnumShieldState(int bitIn, int maxDamageIn, String nameIn, boolean canJGIn, EnumShieldAction actionIn, Item ...itemsIn)
         {
+            bit = bitIn;
             maxDamage = maxDamageIn;
             nameMaterial = nameIn;
             canJG = canJGIn;
@@ -164,6 +222,18 @@ public class ItemSShield extends ItemShield
         {
             EnumShieldState state[] = EnumShieldState.class.getEnumConstants();
             return state.length > ordinal ? state[ordinal] : null;
+        }
+
+        @Nullable
+        public static EnumShieldState getStateFromBit(int bitIn)
+        {
+            EnumShieldState state[] = EnumShieldState.class.getEnumConstants();
+            for (EnumShieldState s : state)
+            {
+                if (s.bit == bitIn) { return s; }
+            }
+
+            return null;
         }
     }
 }

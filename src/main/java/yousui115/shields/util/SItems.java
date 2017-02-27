@@ -16,8 +16,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import yousui115.shields.Shields;
 import yousui115.shields.client.TileEntityShield;
 import yousui115.shields.client.TileEntityShieldRenderer;
-import yousui115.shields.item.ItemSShield;
-import yousui115.shields.item.ItemSShield.EnumShieldState;
+import yousui115.shields.item.ItemShields;
+import yousui115.shields.item.ItemShields.EnumShieldState;
 
 public class SItems
 {
@@ -46,7 +46,7 @@ public class SItems
     private static void create()
     {
         //■盾
-        SHIELD = (new ItemSShield())
+        SHIELD = (new ItemShields())
                         .setUnlocalizedName("shields")
                         .setCreativeTab(CreativeTabs.COMBAT)
                         .setHasSubtypes(false)
@@ -71,11 +71,8 @@ public class SItems
     public static void registerModels()
     {
         //■
-        for (EnumShieldState state : EnumShieldState.class.getEnumConstants())
-        {
-            ModelBakery.registerItemVariants(SItems.SHIELD, SItems.RL_SHIELD, SItems.RL_SHIELD_B);
-            ModelLoader.setCustomMeshDefinition(SItems.SHIELD, createMeshDefinition(SItems.RL_SHIELD));
-        }
+        ModelBakery.registerItemVariants(SItems.SHIELD, SItems.RL_SHIELD, SItems.RL_SHIELD_B);
+        ModelLoader.setCustomMeshDefinition(SItems.SHIELD, createMeshDefinition(SItems.RL_SHIELD));
     }
 
     @SideOnly(Side.CLIENT)

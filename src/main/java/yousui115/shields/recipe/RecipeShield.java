@@ -10,7 +10,7 @@ import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
-import yousui115.shields.item.ItemSShield;
+import yousui115.shields.item.ItemShields;
 
 
 public class RecipeShield implements IRecipe
@@ -57,11 +57,11 @@ public class RecipeShield implements IRecipe
                 {
                     continue;
                 }
-                else if (stack1.getItem() instanceof ItemSShield &&
-                         stack2.getItem() instanceof ItemSShield)
+                else if (stack1.getItem() instanceof ItemShields &&
+                         stack2.getItem() instanceof ItemShields)
                 {
-                    ItemSShield.EnumShieldState state1 = ItemSShield.getShieldState(stack1);
-                    ItemSShield.EnumShieldState state2 = ItemSShield.getShieldState(stack2);
+                    ItemShields.EnumShieldState state1 = ItemShields.getShieldState(stack1);
+                    ItemShields.EnumShieldState state2 = ItemShields.getShieldState(stack2);
 
                     //■同じ物である。
                     if (state1 == state2) { continue; }
@@ -92,11 +92,11 @@ public class RecipeShield implements IRecipe
 
         ItemStack stack = result.copy();
 
-        ItemSShield.EnumShieldState state = ItemSShield.getShieldState(stack);
+        ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
 
         stack.setTagCompound(inv.getStackInSlot(idx).getTagCompound());
 
-        if (state != null) { ItemSShield.setShieldState(stack, state); }
+        if (state != null) { ItemShields.setShieldState(stack, state); }
 
         return stack;
     }
