@@ -18,7 +18,7 @@ public class Shields
 {
     public static final String MOD_ID = "shields";
     public static final String MOD_DOMAIN = "yousui115." + MOD_ID;
-    public static final String VERSION = "M1102_F2185_v2";
+    public static final String VERSION = "M1102_F2185_v3";
 
     public static boolean isInstShield = false;
 
