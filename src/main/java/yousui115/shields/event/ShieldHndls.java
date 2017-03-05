@@ -1,6 +1,10 @@
 package yousui115.shields.event;
 
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import yousui115.shield.event.BashEvent;
 import yousui115.shield.event.GuardEvent;
@@ -8,6 +12,8 @@ import yousui115.shield.event.GuardMeleeEvent;
 import yousui115.shields.item.ItemShields;
 import yousui115.shields.item.ItemShields.EnumShieldAction;
 import yousui115.shields.item.ItemShields.EnumShieldState;
+import yousui115.shields.util.SEnchants;
+import yousui115.shields.util.SUtils;
 
 
 public class ShieldHndls
@@ -25,19 +31,39 @@ public class ShieldHndls
         ItemStack stack = event.blocker.getActiveItemStack();
         ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
 
-        //■JG出来ない盾
-        if (state != null && state.canJG == false)
+        //■何も持って無い奴は帰れ
+        if (stack == null) { return; }
+
+        if (state != null)
         {
-            event.isJG = false;
+            //■JG出来ない盾
+            if (state.canJG() == false &&
+                stack.getItem() instanceof ItemShields)
+            {
+                event.isJG = false;
+            }
+
+            //■炎の盾
+            if (state == EnumShieldState.FLAME && event.source.isFireDamage())
+            {
+                event.amount -= 1;
+                event.blocker.extinguish();
+            }
         }
 
-        //■炎の盾
-        if (state == EnumShieldState.FLAME &&
-            event.source.isFireDamage())
+        //■盾にダメージを与えるだけの処理
+        EntityLivingBase blocker = event.blocker;
+        DamageSource source = event.source;
+
+        //■盾の乙女 効果
+        if (event.isGuard && EnchantmentHelper.getEnchantmentLevel(SEnchants.ENCH_MAIDEN, stack) == 1)
         {
-//            ObfuscationReflectionHelper.setPrivateValue(DamageSource.class, event.source, false, 18);
             event.amount -= 1;
-            event.blocker.extinguish();
+        }
+
+        if (!event.isJG && blocker instanceof EntityPlayer)
+        {
+            SUtils.damageShield((EntityPlayer)blocker, event.amount);
         }
     }
 
@@ -77,6 +103,8 @@ public class ShieldHndls
 
         ItemStack stack = event.basher.getActiveItemStack();
         ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
+
+        if (state == null) { return; }
 
         if (state.action == EnumShieldAction.FIRE)
         {

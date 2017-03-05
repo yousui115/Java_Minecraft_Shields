@@ -2,7 +2,6 @@ package yousui115.shields.item;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.creativetab.CreativeTabs;
@@ -14,6 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -60,6 +60,21 @@ public class ItemShields extends ItemShield
     @Override
     public void addInformation(ItemStack stack, EntityPlayer playerIn, List<String> tooltip, boolean advanced)
     {
+        int states = ItemShields.getShieldStates(stack);
+        if (states == 0) { return; }
+
+        String tip = "";
+
+        for (int next = 1; next != ~Integer.MAX_VALUE; next <<= 1)
+        {
+            if ((states & next) != next) { continue; }
+
+            EnumShieldState state = EnumShieldState.getStateFromBit(next);
+
+            tip += state.getTooltip();
+        }
+
+        tooltip.add(tip);
     }
 
     @Override
@@ -80,7 +95,7 @@ public class ItemShields extends ItemShield
         {
             ItemStack stack = new ItemStack(itemIn);
             setShieldState(stack, state);
-            setShieldStates(stack, state);
+            addShieldStates(stack, state);
             subItems.add(stack);
         }
     }
@@ -110,16 +125,12 @@ public class ItemShields extends ItemShield
 
     /* ====================================================================== */
 
-    @Nullable
     public static EnumShieldState getShieldState(ItemStack stackIn)
     {
         EnumShieldState state = null;
 
-        if (stackIn != null
-            && stackIn.getItem() instanceof ItemShields
-//            && stackIn.hasTagCompound()
-//            && stackIn.getTagCompound().hasKey("shields.state")
-           )
+        if (stackIn != null &&
+            stackIn.getItem() instanceof ItemShields)
         {
             NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
 
@@ -129,23 +140,18 @@ public class ItemShields extends ItemShield
         return state;
     }
 
-    public static void setShieldState(@Nonnull ItemStack stackIn, @Nonnull EnumShieldState stateIn)
+    public static void setShieldState(ItemStack stackIn, EnumShieldState stateIn)
     {
         NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
         nbt.setInteger("state", stateIn.ordinal());
     }
 
-
-    @Nullable
     public static int getShieldStates(ItemStack stackIn)
     {
         int states = 0;
 
         if (stackIn != null
-            && stackIn.getItem() instanceof ItemShields
-//            && stackIn.hasTagCompound()
-//            && stackIn.getTagCompound().hasKey("shields.state")
-           )
+            && stackIn.getItem() instanceof ItemShields )
         {
             NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
 
@@ -155,17 +161,38 @@ public class ItemShields extends ItemShield
         return states;
     }
 
-    public static void setShieldStates(@Nonnull ItemStack stackIn, @Nonnull EnumShieldState stateIn)
+    public static void setShieldStates(ItemStack stackIn, EnumShieldState stateIn)
     {
         NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
         nbt.setInteger("states", stateIn.ordinal());
     }
 
-    public static void addShieldStates(@Nonnull ItemStack stackIn, @Nonnull EnumShieldState stateIn)
+    public static void addShieldStates(ItemStack stackIn, EnumShieldState stateIn)
     {
         NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
         int states = nbt.getInteger("states");
         nbt.setInteger("states", states | stateIn.bit);
+    }
+
+    public static void setShieldEOHand(ItemStack stackIn, boolean equipIn)
+    {
+        NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
+        nbt.setBoolean("offhand", equipIn);
+    }
+
+    public static boolean getShieldEOHand(ItemStack stackIn)
+    {
+        boolean equip = false;
+
+        if (stackIn != null
+            && (stackIn.getItem() instanceof ItemShields || stackIn.getItem() == Items.SHIELD))
+        {
+            NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
+
+            equip = nbt.getBoolean("offhand");
+        }
+
+        return equip;
     }
 
     /**
@@ -185,16 +212,15 @@ public class ItemShields extends ItemShield
      */
     public enum EnumShieldState
     {
-        WOOD(    0x00,   50,     "wood", false,    EnumShieldAction.NONE, Item.getItemFromBlock(Blocks.PLANKS)),
-        FLAME(   0x01, 1000,    "flame",  true,    EnumShieldAction.FIRE, Items.QUARTZ),
-        ICE(     0x02, 1000,      "ice",  true,  EnumShieldAction.FREEZE, Item.getItemFromBlock(Blocks.ICE)),
-        DIAMOND( 0x04, 1000,  "diamond",  true, EnumShieldAction.REFLECT, Items.DIAMOND),
-        OBSIDIAN(0x08, 1000, "obsidian",  true,  EnumShieldAction.ROBUST, Item.getItemFromBlock(Blocks.OBSIDIAN));
+        WOOD(    0x00,   50,     "wood",    EnumShieldAction.NONE, Item.getItemFromBlock(Blocks.PLANKS)),
+        FLAME(   0x01, 1000,    "flame",    EnumShieldAction.FIRE, Items.QUARTZ),
+        ICE(     0x02, 1000,      "ice",  EnumShieldAction.FREEZE, Item.getItemFromBlock(Blocks.ICE)),
+        DIAMOND( 0x04, 1000,  "diamond", EnumShieldAction.REFLECT, Items.DIAMOND),
+        OBSIDIAN(0x08, 1000, "obsidian",  EnumShieldAction.ROBUST, Item.getItemFromBlock(Blocks.OBSIDIAN));
 
         public final int bit;
         public final int maxDamage;
         public final String nameMaterial;
-        public final boolean canJG;
         public final EnumShieldAction action;
 
         public final List<Item> items;
@@ -202,17 +228,21 @@ public class ItemShields extends ItemShield
         /**
          * ■
          */
-        private EnumShieldState(int bitIn, int maxDamageIn, String nameIn, boolean canJGIn, EnumShieldAction actionIn, Item ...itemsIn)
+        private EnumShieldState(int bitIn, int maxDamageIn, String nameIn, EnumShieldAction actionIn, Item ...itemsIn)
         {
             bit = bitIn;
             maxDamage = maxDamageIn;
             nameMaterial = nameIn;
-            canJG = canJGIn;
             action = actionIn;
 
             items = Lists.newArrayList();
             for (Item item : itemsIn) { items.add(item); }
         }
+
+        /**
+         * ■
+         */
+        public boolean canJG() { return this == WOOD ? false : true; }
 
         /**
          * ■
@@ -224,6 +254,9 @@ public class ItemShields extends ItemShield
             return state.length > ordinal ? state[ordinal] : null;
         }
 
+        /**
+         * ■
+         */
         @Nullable
         public static EnumShieldState getStateFromBit(int bitIn)
         {
@@ -235,5 +268,76 @@ public class ItemShields extends ItemShield
 
             return null;
         }
+
+        /**
+         * ■
+         */
+        public Object[] getObjectMaterial()
+        {
+            Object[] obj = new Object[2];
+
+            switch (this)
+            {
+            case FLAME:
+                obj[0] = Blocks.MAGMA;
+                obj[1] = Items.QUARTZ;
+                break;
+
+            case ICE:
+                obj[0] = Blocks.ICE;
+                obj[1] = Blocks.PACKED_ICE;
+                break;
+
+            case DIAMOND:
+                obj[0] = Items.DIAMOND;
+                obj[1] = Items.ENDER_PEARL;
+                break;
+
+            case OBSIDIAN:
+                obj[0] = Blocks.OBSIDIAN;
+                obj[1] = Items.ENDER_PEARL;
+                break;
+
+            case WOOD:
+            default:
+                obj[0] = null;
+                obj[1] = null;
+                break;
+            }
+
+            return obj;
+        }
+
+        @Nullable
+        public String getTooltip()
+        {
+            String tooltip;
+
+            switch(this)
+            {
+            case FLAME:
+                tooltip = TextFormatting.RED + " F";
+                break;
+
+            case ICE:
+                tooltip = TextFormatting.BLUE + " I";
+                break;
+
+            case DIAMOND:
+                tooltip = TextFormatting.AQUA + " D";
+                break;
+
+            case OBSIDIAN:
+                tooltip = TextFormatting.DARK_PURPLE + " O";
+                break;
+
+            case WOOD:
+            default:
+                tooltip = null;
+                break;
+            }
+            return tooltip;
+        }
+
     }
 }

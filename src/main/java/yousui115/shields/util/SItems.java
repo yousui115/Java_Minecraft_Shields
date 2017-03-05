@@ -22,8 +22,8 @@ import yousui115.shields.item.ItemShields.EnumShieldState;
 public class SItems
 {
     public static Item SHIELD;
-    public static ResourceLocation RL_SHIELD;
-    public static ResourceLocation RL_SHIELD_B;
+    private static ResourceLocation RL_SHIELD;
+    private static ResourceLocation RL_SHIELD_B;
 
     /**
      * ■

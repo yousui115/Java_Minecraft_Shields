@@ -9,6 +9,7 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import yousui115.shields.network.PacketHandler;
+import yousui115.shields.util.SEnchants;
 import yousui115.shields.util.SItems;
 import yousui115.shields.util.SRecipes;
 
@@ -37,6 +38,9 @@ public class Shields
     {
         //■アイテムの生成と登録
         SItems.init();
+
+        //■エンチャントの生成と登録
+        SEnchants.init();
 
         //■メッセージの初期設定
         PacketHandler.init();

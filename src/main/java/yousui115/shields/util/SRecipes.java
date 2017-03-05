@@ -2,6 +2,7 @@ package yousui115.shields.util;
 
 import static net.minecraftforge.oredict.RecipeSorter.Category.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.block.Block;
@@ -33,10 +34,10 @@ public class SRecipes
 
     private static void register()
     {
-        //TODO もうちょっと綺麗にかけるだろう！
+        //TODO もうちょっと綺麗にかけないものか
 
         //■ベース
-        ItemStack[] astackShields = new ItemStack[EnumShieldState.values().length];
+        HashMap<EnumShieldState, ItemStack> mapShields = Maps.newHashMapWithExpectedSize(EnumShieldState.values().length);
         for (EnumShieldState state : EnumShieldState.values())
         {
             ItemStack stackShields = new ItemStack(SItems.SHIELD);
@@ -44,84 +45,35 @@ public class SRecipes
             ItemShields.setShieldState(stackShields, state);
             ItemShields.setShieldStates(stackShields, state);
 
-            astackShields[state.ordinal()] = stackShields;
+            mapShields.put(state, stackShields);
         }
 
         //■木の盾
-        SRecipes.addRecipe(astackShields[EnumShieldState.WOOD.ordinal()].copy(), Blocks.PLANKS, Blocks.LOG, Blocks.PLANKS);
-
-        SRecipes.addRecipe(astackShields[EnumShieldState.WOOD.ordinal()].copy(), Blocks.PLANKS, Blocks.LOG2, Blocks.PLANKS);
+        SRecipes.addRecipe(mapShields.get(EnumShieldState.WOOD).copy(), Blocks.PLANKS, Blocks.LOG, Blocks.PLANKS);
+        SRecipes.addRecipe(mapShields.get(EnumShieldState.WOOD).copy(), Blocks.PLANKS, Blocks.LOG2, Blocks.PLANKS);
 
         //■木の盾 -> バニラの盾
-        SRecipes.addRecipe(new ItemStack(Items.SHIELD), Blocks.PLANKS, Items.IRON_INGOT, astackShields[EnumShieldState.WOOD.ordinal()].copy());
+        SRecipes.addRecipe(new ItemStack(Items.SHIELD), Blocks.PLANKS, Items.IRON_INGOT, mapShields.get(EnumShieldState.WOOD).copy());
 
         //■上位盾
-        Object[][] material = {{Items.STICK, Items.STICK},
-                               {Blocks.MAGMA, Items.QUARTZ},
-                               {Blocks.ICE, Blocks.PACKED_ICE},
-                               {Items.DIAMOND, Items.ENDER_PEARL},
-                               {Blocks.OBSIDIAN, Items.ENDER_PEARL}};
-
         for (EnumShieldState stateResult : EnumShieldState.values())
         {
-            if (stateResult == EnumShieldState.WOOD) { continue; }
+            //■盾生成の為の「マテリアル」「キー」を取得
+            Object[] obj = stateResult.getObjectMaterial();
+            if (obj[0] == null && obj[1] == null) { continue; }
 
-            //■バニラの盾 -> 追加盾
-            SRecipes.addRecipe(astackShields[stateResult.ordinal()].copy(), material[stateResult.ordinal()][0], material[stateResult.ordinal()][1], Items.SHIELD);
+            //■バニラの盾 -> 追加盾 のクラフトレシピ
+            SRecipes.addRecipe(mapShields.get(stateResult).copy(), obj[0], obj[1], Items.SHIELD);
 
-            //■追加盾 -> 追加盾
+            //■追加盾 -> 追加盾 のクラフトレシピ
             for (EnumShieldState state : EnumShieldState.values())
             {
                 if (state != EnumShieldState.WOOD && state != stateResult)
                 {
-                    SRecipes.addRecipe(astackShields[stateResult.ordinal()].copy(), material[stateResult.ordinal()][0], material[stateResult.ordinal()][1], astackShields[state.ordinal()].copy());
+                    SRecipes.addRecipe(mapShields.get(stateResult).copy(), obj[0], obj[1], mapShields.get(state).copy());
                 }
             }
-
         }
-
-//        SRecipes.addRecipe(astackShields[EnumShieldState.FLAME.ordinal()].copy(), Blocks.MAGMA, Items.QUARTZ, Items.SHIELD);
-//
-//        for (EnumShieldState state : EnumShieldState.values())
-//        {
-//            if (state != EnumShieldState.WOOD && state != EnumShieldState.FLAME)
-//            {
-//                SRecipes.addRecipe(astackShields[EnumShieldState.FLAME.ordinal()].copy(), Blocks.MAGMA, Items.QUARTZ, astackShields[state.ordinal()].copy());
-//            }
-//        }
-//
-//        //■氷の盾
-//        SRecipes.addRecipe(astackShields[EnumShieldState.ICE.ordinal()].copy(), Blocks.ICE, Blocks.PACKED_ICE, Items.SHIELD);
-//
-//        for (EnumShieldState state : EnumShieldState.values())
-//        {
-//            if (state != EnumShieldState.WOOD && state != EnumShieldState.ICE)
-//            {
-//                SRecipes.addRecipe(astackShields[EnumShieldState.ICE.ordinal()].copy(), Blocks.ICE, Blocks.PACKED_ICE, astackShields[state.ordinal()].copy());
-//            }
-//        }
-//
-//        //■ダイヤモンドの盾
-//        SRecipes.addRecipe(astackShields[EnumShieldState.DIAMOND.ordinal()].copy(), Items.DIAMOND, Items.ENDER_PEARL, Items.SHIELD);
-//
-//        for (EnumShieldState state : EnumShieldState.values())
-//        {
-//            if (state != EnumShieldState.WOOD && state != EnumShieldState.DIAMOND)
-//            {
-//                SRecipes.addRecipe(astackShields[EnumShieldState.DIAMOND.ordinal()].copy(), Items.DIAMOND, Items.ENDER_PEARL, astackShields[state.ordinal()].copy());
-//            }
-//        }
-//
-//        //■黒曜石の盾
-//        SRecipes.addRecipe(astackShields[EnumShieldState.OBSIDIAN.ordinal()].copy(), Blocks.OBSIDIAN, Items.ENDER_PEARL, Items.SHIELD);
-//
-//        for (EnumShieldState state : EnumShieldState.values())
-//        {
-//            if (state != EnumShieldState.WOOD && state != EnumShieldState.OBSIDIAN)
-//            {
-//                SRecipes.addRecipe(astackShields[EnumShieldState.OBSIDIAN.ordinal()].copy(), Blocks.OBSIDIAN, Items.ENDER_PEARL, astackShields[state.ordinal()].copy());
-//            }
-//        }
     }
 
 

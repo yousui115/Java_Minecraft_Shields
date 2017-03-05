@@ -22,8 +22,6 @@ public class CommonProxy
 
     public void registerEvent()
     {
-//        MinecraftForge.EVENT_BUS.register(new FirstLoginGiveItemEvent());
-
         if (Shields.isInstShield)
         {
             MinecraftForge.EVENT_BUS.register(new ShieldHndls());
