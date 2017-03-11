@@ -11,6 +11,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
+import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.AnvilRepairEvent;
@@ -19,6 +20,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import yousui115.shields.Shields;
 import yousui115.shields.item.ItemShields;
+import yousui115.shields.item.ItemShields.EnumShieldState;
 import yousui115.shields.util.SEnchants;
 import yousui115.shields.util.SUtils;
 
@@ -54,11 +56,27 @@ public class ShieldsHndls
     /**
      * ■Anvil GUI iput -> output
      */
-//    @SubscribeEvent
-//    public void updateAnvilItemSlot(AnvilUpdateEvent event)
-//    {
-//
-//    }
+    @SubscribeEvent
+    public void updateAnvilItemSlot(AnvilUpdateEvent event)
+    {
+        ItemStack left = event.getLeft();
+        ItemStack output = event.getOutput();
+
+        if ((left.getItem() == Items.SHIELD || left.getItem() instanceof ItemShields) &&
+            event.getLeft().getItem().getIsRepairable(event.getLeft(), event.getRight()) &&
+            EnchantmentHelper.getEnchantmentLevel(SEnchants.ENCH_MAIDEN, left) == 1 ? true : false)
+        {
+            int cost = 2;
+
+            if (left.getItem() instanceof ItemShields)
+            {
+                EnumShieldState state = ItemShields.getShieldState(left);
+                cost = state.getRepairCost();
+            }
+
+            left.setRepairCost(cost);
+        }
+    }
 
     /**
      * ■Anvil GUI output -> pickup from slot

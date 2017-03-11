@@ -25,14 +25,15 @@ public class ShieldHndls
     @SubscribeEvent
     public void doGuard(GuardEvent event)
     {
+        if (event.blocker == null || event.source == null) { return; }
+
         //■サーバ側だけで動かす
         if (event.blocker.worldObj.isRemote) { return; }
 
         ItemStack stack = event.blocker.getActiveItemStack();
-        ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
-
-        //■何も持って無い奴は帰れ
         if (stack == null) { return; }
+
+        ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
 
         if (state != null)
         {
@@ -74,14 +75,17 @@ public class ShieldHndls
     @SubscribeEvent
     public void doJG(GuardMeleeEvent event)
     {
+        if (event.blocker == null || event.attacker == null) { return; }
         if (event.blocker.worldObj.isRemote) { return ; }
 
         ItemStack stack = event.blocker.getActiveItemStack();
+        if (stack == null) { return; }
+
         ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
+        if (state == null) { return; }
 
         if (event.isJG                  //ジャストガード時
             && event.attacker != null   //敵が存在する
-            && state != null            //盾の性能が「反射」
             && state.action == ItemShields.EnumShieldAction.REFLECT)
         {
             if (!event.attacker.attackEntityAsMob(event.attacker))
@@ -99,9 +103,12 @@ public class ShieldHndls
     @SubscribeEvent
     public void doBash(BashEvent event)
     {
+        if (event.basher == null || event.victim == null) { return; }
         if (event.basher.worldObj.isRemote) { return; }
 
         ItemStack stack = event.basher.getActiveItemStack();
+        if (stack == null) { return; }
+
         ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
 
         if (state == null) { return; }

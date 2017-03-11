@@ -164,7 +164,7 @@ public class ItemShields extends ItemShield
     public static void setShieldStates(ItemStack stackIn, EnumShieldState stateIn)
     {
         NBTTagCompound nbt = stackIn.getSubCompound("ShieldsTag", true);
-        nbt.setInteger("states", stateIn.ordinal());
+        nbt.setInteger("states", stateIn.bit);
     }
 
     public static void addShieldStates(ItemStack stackIn, EnumShieldState stateIn)
@@ -339,5 +339,16 @@ public class ItemShields extends ItemShield
             return tooltip;
         }
 
+        public int getRepairCost()
+        {
+            int cost = 1;
+            switch(this)
+            {
+                default:
+                    cost = 2;
+                    break;
+            }
+            return cost;
+        }
     }
 }
