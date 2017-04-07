@@ -9,6 +9,7 @@ import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.world.World;
 import yousui115.shields.item.ItemShields;
 import yousui115.shields.item.ItemShields.EnumShieldState;
+import yousui115.shields.util.SUtils;
 
 public class RecipeShields extends ShapedRecipes
 {
@@ -159,7 +160,7 @@ public class RecipeShields extends ShapedRecipes
             //■インベントリを左上から巡回
             ItemStack stackSlot = inv.getStackInSlot(i);
 
-            if (stackSlot != null &&
+            if (!SUtils.isEmptyStack(stackSlot) &&
                 (stackSlot.getItem() == Items.SHIELD || stackSlot.getItem() instanceof ItemShields))
             {
                 //■クラフト先の盾の状態

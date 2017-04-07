@@ -89,11 +89,11 @@ public class SUtils
 
                 if (enumhand == EnumHand.MAIN_HAND)
                 {
-                    livingIn.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, (ItemStack)null);
+                    livingIn.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, ItemStack.EMPTY);
                 }
                 else
                 {
-                    livingIn.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, (ItemStack)null);
+                    livingIn.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, ItemStack.EMPTY);
                 }
 
                 livingIn.resetActiveHand();

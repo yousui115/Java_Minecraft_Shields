@@ -5,6 +5,8 @@ import static net.minecraftforge.oredict.RecipeSorter.Category.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -17,8 +19,6 @@ import yousui115.shields.Shields;
 import yousui115.shields.item.ItemShields;
 import yousui115.shields.item.ItemShields.EnumShieldState;
 import yousui115.shields.recipe.RecipeShields;
-
-import com.google.common.collect.Maps;
 
 
 public class SRecipes
@@ -129,7 +129,7 @@ public class SRecipes
         for (map = Maps.<Character, ItemStack>newHashMap(); i < recipeComponents.length; i += 2)
         {
             Character character = (Character)recipeComponents[i];
-            ItemStack itemstack = null;
+            ItemStack itemstack = ItemStack.EMPTY;
 
             if (recipeComponents[i + 1] instanceof Item)
             {
@@ -159,7 +159,7 @@ public class SRecipes
             }
             else
             {
-                aitemstack[l] = null;
+                aitemstack[l] = ItemStack.EMPTY;
             }
         }
 
