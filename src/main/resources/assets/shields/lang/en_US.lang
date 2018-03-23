@@ -1,0 +1,8 @@
+#
+item.shields.wood.name=Wood Shield
+item.shields.flame.name=Flame Shield
+item.shields.ice.name=Ice Shield
+item.shields.diamond.name=Diamond Shield
+item.shields.obsidian.name=Obsidian Shield
+key.shields.change=Shield Mode Change Key
+enchantment.shields.maiden=Shield Maiden

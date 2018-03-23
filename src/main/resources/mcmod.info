@@ -1,0 +1,16 @@
+[
+{
+  "modid": "shields",
+  "name": "Shields",
+  "description": "add shields.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["yousui115"],
+  "credits": ":-)",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
