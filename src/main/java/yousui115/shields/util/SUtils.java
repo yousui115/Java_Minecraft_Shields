@@ -3,6 +3,7 @@ package yousui115.shields.util;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
@@ -105,5 +106,7 @@ public class SUtils
         return isBreak;
     }
 
+    //■追加盾 or バニラ盾
+    public static boolean isShieldsOrVShield(ItemStack stackIn) { return stackIn.getItem() == Items.SHIELD || stackIn.getItem() instanceof ItemShields; }
     public static boolean isEmptyStack(ItemStack stackIn) { return stackIn == null || stackIn.isEmpty(); }
 }

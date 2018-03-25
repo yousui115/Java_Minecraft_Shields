@@ -3,7 +3,6 @@ package yousui115.shields.event;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -14,18 +13,18 @@ import yousui115.shields.item.ItemShields;
 import yousui115.shields.item.ItemShields.EnumShieldAction;
 import yousui115.shields.item.ItemShields.EnumShieldState;
 import yousui115.shields.util.SEnchants;
-import yousui115.shields.util.SItems;
 import yousui115.shields.util.SUtils;
 
 
 public class ShieldHndls
 {
     /**
-     * ■ガード可能な攻撃をガードした
+     * ■ダメージ処理前に呼ばれる。
+     * 　（防御不可のダメージソースも入ってくるよ）
      * @param event
      */
     @SubscribeEvent
-    public void doGuard(GuardEvent event)
+    public void doDamaged(GuardEvent event)
     {
         if (event.blocker == null || event.source == null) { return; }
 
@@ -61,6 +60,7 @@ public class ShieldHndls
         //■盾の乙女 効果
         if (event.isGuard && EnchantmentHelper.getEnchantmentLevel(SEnchants.ENCH_MAIDEN, stack) == 1)
         {
+            //■ダメージを1減らす
             event.amount -= 1;
         }
 
@@ -75,20 +75,24 @@ public class ShieldHndls
      * @param event
      */
     @SubscribeEvent
-    public void doJG(GuardMeleeEvent event)
+    public void doGuardMelee(GuardMeleeEvent event)
     {
+        //■ブロッカー、アタッカー、共に必要
         if (event.blocker == null || event.attacker == null) { return; }
+        //■サーバーサイドのみ
         if (event.blocker.getEntityWorld().isRemote) { return ; }
 
+        //■持ち手が空（壊れたとか）なら処理しない
         ItemStack stack = event.blocker.getActiveItemStack();
         if (SUtils.isEmptyStack(stack)) { return; }
-
+        //■追加盾で無い場合も処理しない
         ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
         if (state == null) { return; }
 
         //▼JG
         if (event.isJG)
         {
+            //■タイプ：反射
             if (state.action == ItemShields.EnumShieldAction.REFLECT)
             {
                 if (!event.attacker.attackEntityAsMob(event.attacker))
@@ -98,33 +102,13 @@ public class ShieldHndls
                 }
             }
         }
-        //▼not JG
+        //▼normal Guard
         else
         {
-            //■斧には弱い
-            if (event.blocker instanceof EntityPlayer)
+            //■タイプ：頑丈
+            if (state.action == ItemShields.EnumShieldAction.ROBUST)
             {
-                EntityPlayer entityplayer = (EntityPlayer)event.blocker;
-                ItemStack itemstack = event.attacker.getHeldItemMainhand();
-                ItemStack itemstack1 = entityplayer.isHandActive() ? entityplayer.getActiveItemStack() : ItemStack.EMPTY;
-
-                if (state.action == EnumShieldAction.ROBUST)
-                {
-                    //TODO 何か特殊な音をならしたい。
-                }
-                else if (!itemstack.isEmpty() &&
-                    !itemstack1.isEmpty() &&
-                    itemstack.getItem() instanceof ItemAxe &&
-                    itemstack1.getItem() instanceof ItemShields)
-                {
-                    float f1 = 0.25F + (float)EnchantmentHelper.getEfficiencyModifier(event.attacker) * 0.05F;
-
-                    if (entityplayer.getRNG().nextFloat() < f1)
-                    {
-                        entityplayer.getCooldownTracker().setCooldown(SItems.SHIELD, 100);
-                        entityplayer.getEntityWorld().setEntityState(entityplayer, (byte)30);
-                    }
-                }
+                event.canDisableShield = false;
             }
         }
     }
@@ -161,6 +145,5 @@ public class ShieldHndls
                 event.amount *= 2;
             }
         }
-
     }
 }

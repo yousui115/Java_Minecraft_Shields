@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -130,6 +131,12 @@ public class ItemShields extends ItemShield
         return state != null ? state.ordinal() : 0;
     }
 
+    @Override
+    public boolean isShield(ItemStack stack, @Nullable EntityLivingBase entity)
+    {
+        return this instanceof ItemShield;
+    }
+
     /* ====================================================================== */
 
     public static EnumShieldState getShieldState(ItemStack stackIn)
@@ -181,13 +188,13 @@ public class ItemShields extends ItemShield
         nbt.setInteger("states", states | stateIn.bit);
     }
 
-    public static void setShieldEOHand(ItemStack stackIn, boolean equipIn)
+    public static void setShieldeOHand(ItemStack stackIn, boolean equipIn)
     {
         NBTTagCompound nbt = stackIn.getOrCreateSubCompound("ShieldsTag");
         nbt.setBoolean("offhand", equipIn);
     }
 
-    public static boolean getShieldEOHand(ItemStack stackIn)
+    public static boolean getShieldeOHand(ItemStack stackIn)
     {
         boolean equip = false;
 

@@ -1,7 +1,7 @@
 # 追加盾
 
-## ■DL (M1122_F2611_v1)
-https://www.dropbox.com/s/2pzez89b5n5nkm4/shields_M1122_F2611_v1.jar?dl=0
+## ■DL (M1122_F2611_v2)
+https://www.dropbox.com/s/8vx3vlhoe3cqr65/shields_M1122_F2611_v2.jar?dl=0
 
 ## ■動作環境
 Minecraft 1.12.2

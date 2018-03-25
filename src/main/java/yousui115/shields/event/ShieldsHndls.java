@@ -5,81 +5,23 @@ import java.util.Map;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.AnvilUpdateEvent;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.AnvilRepairEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import yousui115.shields.Shields;
 import yousui115.shields.item.ItemShields;
 import yousui115.shields.item.ItemShields.EnumShieldState;
 import yousui115.shields.util.SEnchants;
-import yousui115.shields.util.SItems;
 import yousui115.shields.util.SUtils;
 
 public class ShieldsHndls
 {
-    /**
-     * ■盾にダメージを与えるだけの処理
-     * @param event
-     */
-    @SubscribeEvent
-    public void doDamageShield(LivingAttackEvent event)
-    {
-        //■盾強化が入っているなら、そちらで処理
-        if (Shields.isInstShield) { return; }
-
-        EntityLivingBase blocker = event.getEntityLiving();
-        DamageSource source = event.getSource();
-        float amount = event.getAmount();
-
-        //■サーバサイドのみ
-        if (blocker.getEntityWorld().isRemote) { return; }
-
-        if (SUtils.checkDamageShield(blocker, source, amount))
-        {
-            event.setCanceled(true);
-        }
-
-        //■斧には弱い
-        if (event.getEntityLiving() instanceof EntityPlayer)
-        {
-            EntityPlayer entityplayer = (EntityPlayer)event.getEntityLiving();
-
-            EntityLivingBase attacker = null;
-            if (!(source.getImmediateSource() instanceof EntityLivingBase)) { return; }
-            attacker = (EntityLivingBase)source.getImmediateSource();
-
-            ItemStack itemstack = attacker.getHeldItemMainhand();
-            ItemStack itemstack1 = entityplayer.isHandActive() ? entityplayer.getActiveItemStack() : ItemStack.EMPTY;
-
-            if (!itemstack.isEmpty() &&
-                !itemstack1.isEmpty() &&
-                itemstack.getItem() instanceof ItemAxe &&
-                itemstack1.getItem() instanceof ItemShields)
-            {
-                float f1 = 0.25F + (float)EnchantmentHelper.getEfficiencyModifier(attacker) * 0.05F;
-
-                if (entityplayer.getRNG().nextFloat() < f1)
-                {
-                    entityplayer.getCooldownTracker().setCooldown(SItems.SHIELD, 100);
-                    entityplayer.getEntityWorld().setEntityState(entityplayer, (byte)30);
-                }
-            }
-        }
-    }
-
-
-
     /**
      * ■Anvil GUI iput -> output
      */
@@ -89,12 +31,24 @@ public class ShieldsHndls
         ItemStack left = event.getLeft();
         ItemStack output = event.getOutput();
 
-        if ((left.getItem() == Items.SHIELD || left.getItem() instanceof ItemShields) &&
+        boolean isEnchSM = EnchantmentHelper.getEnchantmentLevel(SEnchants.ENCH_MAIDEN, left) == 1 ? true : false;
+
+        //■「特定の盾」かつ「金床修理OK」かつ「盾の乙女、付与済み」
+        if (SUtils.isShieldsOrVShield(left) &&
             event.getLeft().getItem().getIsRepairable(event.getLeft(), event.getRight()) &&
-            EnchantmentHelper.getEnchantmentLevel(SEnchants.ENCH_MAIDEN, left) == 1 ? true : false)
+            isEnchSM == true)
         {
+            //■コストを補正
             int cost = getRepairCost(left);
-            left.setRepairCost(cost);
+            left.setRepairCost(cost < event.getCost() ? cost : event.getCost());
+        }
+
+        //■「追加盾」同士の合成はさせない。
+        ItemStack right = event.getRight();
+        if (left.getItem() == right.getItem() && left.getItem() instanceof ItemShields)
+        {
+            //■以降の処理をさせない。
+            event.setCanceled(true);
         }
     }
 
@@ -110,17 +64,17 @@ public class ShieldsHndls
 
         Map<Enchantment, Integer> enchMap = EnchantmentHelper.getEnchantments(result);
 
-        if ((result.getItem() == Items.SHIELD || result.getItem() instanceof ItemShields) &&
+        //■「特定の盾」かつ「盾の乙女、未付与」かつ「リネームを含む」
+        if (SUtils.isShieldsOrVShield(result) &&
             !enchMap.containsKey(SEnchants.ENCH_MAIDEN) &&
             !input.getDisplayName().equals(result.getDisplayName()))
         {
-            //■盾の乙女が無い かつ リネームした
+            //■「盾の乙女」付与
             enchMap.put(SEnchants.ENCH_MAIDEN, 1);
             EnchantmentHelper.setEnchantments(enchMap, result);
 
-            int cost = getRepairCost(result);
-            result.setRepairCost(cost);
-
+            //■コストリセット
+            result.setRepairCost(0);
         }
     }
 
@@ -128,31 +82,39 @@ public class ShieldsHndls
     {
         int cost = 2;
 
-        if (stackIn.getItem() instanceof ItemShields)
+        EnumShieldState state = ItemShields.getShieldState(stackIn);
+
+        if (state != null)
         {
-            EnumShieldState state = ItemShields.getShieldState(stackIn);
             cost = state.getRepairCost();
         }
-
-//        cost = cost < left.getRepairCost() ? cost : left.getRepairCost();
 
         return cost;
     }
 
-    @SubscribeEvent
+    /**
+     * ■プレイヤーに死が訪れた瞬間
+     * @param event
+     */
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public void a(LivingDeathEvent event)
     {
+        //■プレイヤーがやられた
         if (event.getEntityLiving() instanceof EntityPlayer)
         {
             EntityPlayer player = (EntityPlayer)event.getEntityLiving();
 
+            //■オフハンドをまさぐる
             for (ItemStack stack : player.inventory.offHandInventory)
             {
-                if (!SUtils.isEmptyStack(stack) && (stack.getItem() instanceof ItemShields || stack.getItem() == Items.SHIELD))
+                //■追加盾 or バニラ盾 を持ってる
+                if (!SUtils.isEmptyStack(stack) && SUtils.isShieldsOrVShield(stack))
                 {
+                    //■エンチャント「盾の乙女」がついてる
                     if (EnchantmentHelper.getEnchantmentLevel(SEnchants.ENCH_MAIDEN, stack) == 1)
                     {
-                        ItemShields.setShieldEOHand(stack, true);
+                        //■「盾の乙女」の付いた「盾」を「オフハンド」に持ってたよ。と刻印する。
+                        ItemShields.setShieldeOHand(stack, true);
                         break;
                     }
                 }
@@ -160,7 +122,12 @@ public class ShieldsHndls
         }
 
     }
-    @SubscribeEvent
+
+    /**
+     * ■プレイヤーがパーンした時の、アイテムの在り方
+     * @param event
+     */
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public void b(PlayerDropsEvent event)
     {
         Iterator<EntityItem> itr = event.getDrops().iterator();
@@ -169,13 +136,17 @@ public class ShieldsHndls
         {
             ItemStack stack = itr.next().getItem();
 
-            if (ItemShields.getShieldEOHand(stack) == true)
+            //■刻印されている盾であるか否か
+            if (ItemShields.getShieldeOHand(stack) == true)
             {
+                //■パーンしません。
                 itr.remove();
 
+                //■オフハンドに戻します。
                 event.getEntityPlayer().inventory.offHandInventory.set(0, stack);
 
-                ItemShields.setShieldEOHand(stack, false);
+                //■刻印は消されます。
+                ItemShields.setShieldeOHand(stack, false);
             }
         }
     }
@@ -185,8 +156,7 @@ public class ShieldsHndls
     {
         ItemStack stack = event.getOriginal().inventory.offHandInventory.get(0);
 
-        if (!SUtils.isEmptyStack(stack) &&
-            ((stack.getItem() == Items.SHIELD) || stack.getItem() instanceof ItemShields))
+        if (!SUtils.isEmptyStack(stack) && SUtils.isShieldsOrVShield(stack))
         {
             event.getEntityPlayer().inventory.offHandInventory.set(0, stack);
         }

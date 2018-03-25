@@ -10,6 +10,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -34,7 +35,7 @@ public class Shields
 {
     public static final String MOD_ID = "shields";
     public static final String MOD_DOMAIN = "yousui115." + MOD_ID;
-    public static final String VERSION = "M1122_F2611_v1";
+    public static final String VERSION = "M1122_F2611_v2";
 
     public static boolean isInstShield = false;
 
@@ -52,12 +53,6 @@ public class Shields
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-//        //■アイテムの生成と登録
-//        SItems.init();
-
-//        //■エンチャントの生成と登録
-//        SEnchants.init();
-
         //■メッセージの初期設定
         PacketHandler.init();
     }
@@ -80,9 +75,6 @@ public class Shields
 
         //■レンダラーの登録
         proxy.registerRenderers();
-
-        //■レシピの登録
-//        SRecipes.init();
 
         //■イベントフックの登録
         proxy.registerEvent();
@@ -170,5 +162,11 @@ public class Shields
                 }
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void registerModels(ModelRegistryEvent event)
+    {
+        //■TODO
     }
 }

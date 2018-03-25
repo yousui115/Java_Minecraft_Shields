@@ -55,14 +55,6 @@ public class SItems
         RL_SHIELD_B = new ResourceLocation(Shields.MOD_ID, "shields_blocking");
     }
 
-    /**
-     * ■
-     */
-//    private static void registerItems()
-//    {
-//        //■盾
-//        GameRegistry.register(SHIELD, RL_SHIELD);
-//    }
 
     /**
      * ■
