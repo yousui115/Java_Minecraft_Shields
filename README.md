@@ -1,7 +1,7 @@
 # 追加盾
 
-## ■DL (M1122_F2611_v2)
-https://www.dropbox.com/s/8vx3vlhoe3cqr65/shields_M1122_F2611_v2.jar?dl=0
+## ■DL (M1122_F2611_v3)
+https://www.dropbox.com/s/rqk1c674ebygkda/shields_M1122_F2611_v3.jar?dl=0
 
 ## ■動作環境
 Minecraft 1.12.2
@@ -15,7 +15,10 @@ Forge 2611
 - 定期的なバックアップが取れて、不具合に直面しても泣かない強い子が使ってください。
 
 ## ■追加盾
-いつか書くよ。
+- 炎の盾
+- 氷の盾
+- 黒曜の盾
+- 金剛の盾
 
 ## ■謝辞
 さまざまなMinecraft Mod Open Sourceから技術を拝借しております。

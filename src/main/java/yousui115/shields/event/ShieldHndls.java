@@ -1,10 +1,8 @@
 package yousui115.shields.event;
 
 import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSourceIndirect;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import yousui115.shield.event.BashEvent;
 import yousui115.shield.event.GuardEvent;
@@ -26,21 +24,23 @@ public class ShieldHndls
     @SubscribeEvent
     public void doDamaged(GuardEvent event)
     {
+        //■ブロッカーとダメージソースが無いと処理しない
         if (event.blocker == null || event.source == null) { return; }
 
         //■サーバ側だけで動かす
         if (event.blocker.getEntityWorld().isRemote) { return; }
 
+        //■アクティブなアイテムが無いと処理しない
         ItemStack stack = event.blocker.getActiveItemStack();
         if (SUtils.isEmptyStack(stack)) { return; }
 
         ItemShields.EnumShieldState state = ItemShields.getShieldState(stack);
 
+        //■追加盾の種類により、処理を変える
         if (state != null)
         {
             //■JG出来ない盾
-            if (state.canJG() == false &&
-                stack.getItem() instanceof ItemShields)
+            if (state.canJG() == false)
             {
                 event.isJG = false;
             }
@@ -51,22 +51,22 @@ public class ShieldHndls
                 event.amount -= 1;
                 event.blocker.extinguish();
             }
-        }
 
-        //■盾にダメージを与えるだけの処理
-        EntityLivingBase blocker = event.blocker;
-        DamageSource source = event.source;
+            //■「タイプ：頑丈」 は「矢」の攻撃を半減
+            String type = event.source.damageType;
+            if (state.action == EnumShieldAction.ROBUST &&
+                event.source instanceof EntityDamageSourceIndirect &&
+                type.compareTo("arrow") == 0)
+            {
+                event.amount = event.amount / 2;
+            }
+        }
 
         //■盾の乙女 効果
         if (event.isGuard && EnchantmentHelper.getEnchantmentLevel(SEnchants.ENCH_MAIDEN, stack) == 1)
         {
             //■ダメージを1減らす
             event.amount -= 1;
-        }
-
-        if (!event.isJG && blocker instanceof EntityPlayer)
-        {
-            SUtils.damageShield((EntityPlayer)blocker, event.amount);
         }
     }
 
